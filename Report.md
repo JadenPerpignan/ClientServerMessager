@@ -148,5 +148,3 @@ The Multimedia Group Chat Application successfully implements the following core
 4. **Thread Safety**: Resources are synchronized using mutexes and condition variables.
 5. **Efficient Resource Management**: A thread pool and producer-consumer model ensure smooth operation.
 
-This project demonstrates robust handling of multimedia data while maintaining performance, scalability, and synchronization integrity.
-
