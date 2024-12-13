@@ -1,3 +1,8 @@
-/Users/jadenperpignan/CLionProjects/FinalProject/cmake-build-debug/CMakeFiles/FinalProject.dir
 /Users/jadenperpignan/CLionProjects/FinalProject/cmake-build-debug/CMakeFiles/edit_cache.dir
 /Users/jadenperpignan/CLionProjects/FinalProject/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/jadenperpignan/CLionProjects/FinalProject/cmake-build-debug/server/CMakeFiles/server_executable.dir
+/Users/jadenperpignan/CLionProjects/FinalProject/cmake-build-debug/server/CMakeFiles/edit_cache.dir
+/Users/jadenperpignan/CLionProjects/FinalProject/cmake-build-debug/server/CMakeFiles/rebuild_cache.dir
+/Users/jadenperpignan/CLionProjects/FinalProject/cmake-build-debug/client/CMakeFiles/client_executable.dir
+/Users/jadenperpignan/CLionProjects/FinalProject/cmake-build-debug/client/CMakeFiles/edit_cache.dir
+/Users/jadenperpignan/CLionProjects/FinalProject/cmake-build-debug/client/CMakeFiles/rebuild_cache.dir

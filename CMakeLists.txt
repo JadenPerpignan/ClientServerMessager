@@ -3,7 +3,6 @@ project(FinalProject)
 
 set(CMAKE_CXX_STANDARD 26)
 
-add_executable(FinalProject main.cpp
-        protocol.hpp
-        server/server.cpp
-        client/client.cpp)
+# Include subdirectories
+add_subdirectory(server)
+add_subdirectory(client)

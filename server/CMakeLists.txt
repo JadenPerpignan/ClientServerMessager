@@ -1,0 +1,2 @@
+add_executable(server_executable server.cpp)
+target_link_libraries(server_executable pthread)
