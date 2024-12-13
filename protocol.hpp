@@ -1,16 +1,26 @@
-// FinalProject/protocol.hpp
-#include <iostream>
+#pragma once
 #include <string>
 #include <cstring>
 
-struct Packet {
-    char header[10];  // e.g., "TEXT", "AUDIO", "VIDEO"
-    char data[1024];  // Payload
+// Enum for packet types
+enum class PacketType {
+    TEXT,
+    AUDIO,
+    VIDEO
 };
 
-Packet createPacket(const std::string& header, const std::string& message) {
-    Packet packet;
-    strncpy(packet.header, header.c_str(), sizeof(packet.header));
-    strncpy(packet.data, message.c_str(), sizeof(packet.data));
-    return packet;
-}
+// Packet structure
+struct Packet {
+    PacketType type;          // Type of message
+    char metadata[64];        // Metadata: "MSG|USER_ID|DEST_ID"
+    char data[1024];          // Payload data
+
+    // Helper to create packets
+    static Packet createPacket(PacketType type, const std::string& meta, const std::string& payload) {
+        Packet p;
+        p.type = type;
+        strncpy(p.metadata, meta.c_str(), sizeof(p.metadata));
+        strncpy(p.data, payload.c_str(), sizeof(p.data));
+        return p;
+    }
+};

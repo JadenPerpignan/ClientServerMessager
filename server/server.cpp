@@ -1,46 +1,100 @@
 #include <iostream>
-#include <thread>
+#include <cstring>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include <vector>
 #include <mutex>
-#include <netinet/in.h>
-#include <unistd.h>
+#include <opencv2/opencv.hpp>
+#include "server_threadpool.hpp"
+#include "../protocol.hpp"
 
-std::vector<int> client_sockets;
-std::mutex client_mutex;
+const int PORT = 8080;
 
-void handleClient(int client_socket) {
-    char buffer[1024];
-    while (recv(client_socket, buffer, sizeof(buffer), 0) > 0) {
-        std::cout << "Message received: " << buffer << std::endl;
+// Shared chat log
+std::vector<std::string> chatLog;
+std::mutex logMutex; // Mutex to protect chat log
 
-        std::lock_guard<std::mutex> lock(client_mutex);
-        for (int socket : client_sockets) {
-            if (socket != client_socket) {
-                send(socket, buffer, sizeof(buffer), 0);
+void handleClient(int client_fd) {
+    Packet packet;
+
+    // Receive packet
+    while (read(client_fd, &packet, sizeof(packet)) > 0) {
+        std::string metadata(packet.metadata);
+        std::string payload(packet.data);
+
+        switch (packet.type) {
+            case PacketType::TEXT:
+                std::cout << "Text Message: " << payload << std::endl;
+                break;
+
+            case PacketType::AUDIO:
+                std::cout << "Audio Packet Received: Size " << payload.size() << " bytes\n";
+                break;
+
+            case PacketType::VIDEO: {
+                std::cout << "Video Packet Received: Size " << payload.size() << " bytes\n";
+
+                // Decode the frame
+                std::vector<uchar> buffer(payload.begin(), payload.end());
+                cv::Mat frame = cv::imdecode(buffer, cv::IMREAD_COLOR);
+
+                if (!frame.empty()) {
+                    // Display the frame
+                    cv::imshow("Server Video Stream", frame);
+                    cv::waitKey(1); // Required to render the frame
+                }
+                break;
             }
         }
+
+        // Send acknowledgment
+        std::string response = "Server ACK: " + metadata;
+        send(client_fd, response.c_str(), response.size(), 0);
     }
-    close(client_socket);
+
+    close(client_fd);
 }
 
 int main() {
-    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    sockaddr_in server_addr{};
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(8080);
-    server_addr.sin_addr.s_addr = INADDR_ANY;
+    int server_fd;
+    sockaddr_in address{};
+    int addrlen = sizeof(address);
 
-    bind(server_fd, (sockaddr*)&server_addr, sizeof(server_addr));
-    listen(server_fd, 10);
-    std::cout << "Server started on port 8080" << std::endl;
+    // Create socket
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("Socket failed");
+        return 1;
+    }
+
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
+
+    // Bind
+    if (bind(server_fd, (sockaddr*)&address, sizeof(address)) < 0) {
+        perror("Bind failed");
+        return 1;
+    }
+
+    // Listen
+    if (listen(server_fd, 10) < 0) {
+        perror("Listen failed");
+        return 1;
+    }
+
+    std::cout << "Server listening on port " << PORT << "...\n";
+
+    ThreadPool pool(4);
 
     while (true) {
-        int client_socket = accept(server_fd, nullptr, nullptr);
-        {
-            std::lock_guard<std::mutex> lock(client_mutex);
-            client_sockets.push_back(client_socket);
+        int client_fd = accept(server_fd, (sockaddr*)&address, (socklen_t*)&addrlen);
+        if (client_fd < 0) {
+            perror("Accept failed");
+            continue;
         }
-        std::thread(handleClient, client_socket).detach();
+        pool.enqueue([client_fd]() { handleClient(client_fd); });
     }
+
+    close(server_fd);
     return 0;
 }

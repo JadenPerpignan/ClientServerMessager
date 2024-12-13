@@ -3,6 +3,11 @@ project(FinalProject)
 
 set(CMAKE_CXX_STANDARD 26)
 
-# Include subdirectories
-add_subdirectory(server)
-add_subdirectory(client)
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+add_executable(client client.cpp)
+target_link_libraries(client ${OpenCV_LIBS})
+
+add_executable(server server.cpp)
+target_link_libraries(server ${OpenCV_LIBS})
