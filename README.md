@@ -1,83 +1,77 @@
-# FinalProject: Multimedia Group Chat Application
+
+# Multimedia Group Chat Application
 
 ## Overview
 
-This project is a C++ multimedia group chat application designed to showcase key operating system concepts and advanced features:
+The Multimedia Group Chat Application is a client-server project implemented in C++. It allows:
+1. Text-based group chat.
+2. Audio streaming between clients and the server.
+3. Real-time video streaming using OpenCV.
 
-- **Group Text Chat**: Multiple clients can connect to a central server, exchange text messages, and broadcast them to all connected clients.
-- **Future Audio/Video Support**: Integration of audio and video streams using FFmpeg and OpenCV for real-time communication.
-
-### Operating System Concepts
-
-- **Multithreading**: Concurrently handle multiple clients with threads.
-- **Synchronization**: Use mutexes and condition variables to safely share resources.
-- **Scheduling (Thread Pools)**: Efficiently manage client tasks and reduce overhead by implementing a thread pool.
-- **Memory Management**: Manage buffers for incoming/outgoing data efficiently.
-
-The application is designed to be developed in CLion and deployed on a remote Linux environment (e.g., DigitalOcean Droplet or other cloud providers).
+The server manages multiple client connections efficiently using multithreading and a thread pool. Data packets for text, audio, and video are transmitted using a lightweight custom protocol.
 
 ## Features
 
-### Text Chat
-
-- Multiple clients can connect to a single server.
-- All messages sent by one client are broadcast to all others.
-
-### Planned Features
-
-- **Audio Support**: Capture, encode, and send audio data using FFmpeg.
-- **Video Support**: Capture from webcam, encode with FFmpeg, and send frames. Use OpenCV for decoding and displaying video.
+- **Text Chat**: Send and receive group text messages.
+- **Audio Stream**: Capture and transmit audio packets.
+- **Video Stream**: Real-time video capture and display using OpenCV.
+- **Multithreading**: Server handles multiple clients concurrently using a thread pool.
+- **Synchronization**: Shared resources are synchronized using mutexes and condition variables.
 
 ## Directory Structure
 
 ```
-FinalProject/
-├─ CMakeLists.txt         // Top-level CMake configuration
-├─ protocol.hpp           // Protocol definition & packet structure
-├─ server/
-│  ├─ CMakeLists.txt      // Server CMake configuration
-│  └─ server.cpp          // Server implementation
-├─ client/
-│  ├─ CMakeLists.txt      // Client CMake configuration
-│  └─ client.cpp          // Client implementation
-├─ media/                 // Future: audio/video capture utils & sources
-└─ docs/                  // Documentation and design notes
+MultimediaChat/
+├── CMakeLists.txt
+├── protocol.hpp                # Packet structure and protocol definitions
+├── server/
+│   ├── server.cpp              # Server application
+│   ├── server_threadpool.hpp   # Thread pool implementation
+│   └── CMakeLists.txt
+├── client/
+│   ├── client.cpp              # Client application
+│   └── CMakeLists.txt
+├── media/
+│   ├── audio_capture.cpp       # Audio capture (future extension with FFmpeg)
+│   ├── video_capture.cpp       # Video capture using OpenCV
+│   └── media_utils.hpp         # Helper utilities for multimedia
+├── build/                      # Build directory (created during build process)
+├── README.md                   # This file
+└── docs/
+    └── design_notes.md         # Protocol and design notes
 ```
 
-## Getting Started
+## Dependencies
 
-### Prerequisites
+Ensure the following libraries are installed on your system:
 
-- **Operating System**: Linux (Ubuntu 20.04+ recommended)
-- **Compiler**: g++ with C++17 or C++20/C++23 support
-- **Build Tool**: CMake (version 3.10+)
-- **Optional**: CLion IDE for local or remote development
+- **OpenCV**: For video capture and processing.
+- **FFmpeg**: For future audio streaming support.
+- **POSIX Sockets**: For client-server communication.
 
 ### Install Dependencies
 
-On Ubuntu/Debian-based systems:
+Run the following commands:
 
 ```sh
 sudo apt update
-sudo apt install -y build-essential cmake g++
+sudo apt install libopencv-dev libavcodec-dev libavformat-dev libswscale-dev ffmpeg
 ```
 
-For future audio/video features, you’ll eventually need:
+## Build Instructions
 
-```sh
-sudo apt install -y libopencv-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
-```
+Follow these steps to build the project.
 
-### Building the Project
-
-1. Clone or transfer the project to your server or local machine:
+1. Clone the Repository:
 
 ```sh
 git clone https://github.com/yourusername/FinalProject.git
-cd FinalProject
+cd MultimediaChat
 ```
 
-2. Create a build directory and run CMake:
+2. Build the Project:
+
+Create a build directory and compile using CMake:
 
 ```sh
 mkdir build && cd build
@@ -85,99 +79,106 @@ cmake ..
 make
 ```
 
-This will produce two executables:
-- `server_executable` (in `build/server/`)
-- `client_executable` (in `build/client/`)
+3. Verify Build:
 
-### Running the Server and Client
+The server and client executables will be generated in the build directory.
 
-1. Run the Server:
+## Run Instructions
 
-```sh
-cd build/server
-./server_executable
-```
+1. **Start the Server**
 
-You should see:
-
-```
-Server started on port 8080
-```
-
-2. Run the Client:
-
-In another terminal or SSH session:
+Run the server application to listen for incoming client connections:
 
 ```sh
-cd build/client
-./client_executable
+./server/server
 ```
 
-You should see:
+The server listens on port 8080 and accepts multiple clients.
 
-```
-Connected to server
-```
+2. **Start the Client**
 
-Type a message in the client’s terminal and press Enter. The server terminal will log the received message, and any other connected client will display it.
-
-### Connecting Multiple Clients
-
-Open another client session:
+Run the client application in another terminal:
 
 ```sh
-cd build/client
-./client_executable
+./client/client
 ```
 
-Now, typing in one client’s terminal should broadcast the message to all connected clients.
+- **Text Chat**: Enter messages into the client console.
+- **Video Stream**: The client captures video frames from the webcam and sends them to the server.
+- Press Enter to stop video capture.
 
-## Remote Development with CLion
+3. **Run Multiple Clients**
 
-If using CLion Remote Development:
-- Configure CLion to connect to your remote server/Droplet via SSH.
-- Open the FinalProject directory as a project.
-- CLion will handle syncing files, building, and providing a terminal.
-- Use CLion’s built-in Run/Debug Configurations to run `server_executable` and `client_executable`.
+To test scalability, open multiple terminal windows and start multiple clients:
 
-## Protocol Design
+```sh
+./client/client
+```
 
-### Current Protocol (Initial)
+## How It Works
 
-- `protocol.hpp` defines a `Packet` struct with a header and data.
-- Initially using simple strings (e.g., "TEXT", "AUDIO", "VIDEO" in header).
+1. **Client**:
+   - Captures text, audio, or video input.
+   - Wraps the data into a Packet structure.
+   - Sends packets to the server over a TCP connection.
 
-### Future Enhancements
+2. **Server**:
+   - Listens for incoming connections.
+   - Uses a thread pool to handle multiple clients concurrently.
+   - Processes incoming packets:
+     - **Text**: Logs and broadcasts messages.
+     - **Video**: Decodes and displays video frames using OpenCV.
+     - **Audio**: (Future implementation using FFmpeg).
 
-- Add metadata for text (MSG|USER_ID|DEST_ID)
-- Add metadata for video (VIDEO|FRAME_NUM|RESOLUTION)
-- Add metadata for audio (frame numbers, timestamps)
+3. **Protocol**:
+   A lightweight protocol is used to identify packet types and metadata:
 
-## OS Concepts and Planned Enhancements
+   ```
+   [PacketType|Metadata|Payload]
+   ```
 
-- **Multithreading**: Already implemented. The server creates a new thread (`handleClient`) for each client connection.
-- **Synchronization**: Using `std::mutex` and `std::lock_guard` to protect shared resources (e.g., `client_sockets` vector).
-- **Thread Pools (Coming Soon)**: Replace per-client threads with a thread pool to handle requests more efficiently.
-- **Memory Management**: As we add audio/video data, we’ll introduce buffer pools or memory management strategies.
-- **Scalability**: Test with 10+ clients connected simultaneously. Use tools like `top`, `htop`, or profiling to measure resource usage.
-- **CI/CD**: Consider setting up GitHub Actions or DigitalOcean App Platform build triggers for automated builds and tests on each commit.
+### Sample Protocol Examples
 
-## Testing and Debugging
+- **Text Message**:
 
-- Test multiple local clients (via SSH sessions) connected to one server.
-- For debugging memory issues, consider using `valgrind` or AddressSanitizer.
-- For network troubleshooting, use `netstat`, `lsof`, or `tcpdump` to ensure connections are established.
+  ```
+  [MSG|USER1|ALL]
+  Payload: "Hello Group!"
+  ```
 
-## Future Roadmap
+- **Video Frame**:
 
-1. **Implement Thread Pool**:
-   - Add a `ThreadPool` class and refactor server code to enqueue client tasks rather than spawning a thread per client.
-2. **Add Audio Streaming**:
-   - Capture audio using FFmpeg.
-   - Encode and send audio frames as `PacketType::AUDIO`.
-3. **Add Video Streaming**:
-   - Use OpenCV to capture webcam frames.
-   - Encode video frames with FFmpeg and send as `PacketType::VIDEO`.
-   - On the client side, decode and display using OpenCV’s `imshow`.
-4. **Authentication and User Management**:
-   - Add user IDs, authentication steps, and possibly private messages.
+  ```
+  [VIDEO|FRAME|RESOLUTION]
+  Payload: Encoded JPEG frame data
+  ```
+
+## Testing
+
+- Test the server with multiple client instances.
+- Use tools like Wireshark to verify packet transmission:
+  - Filter: tcp.port == 8080
+- Run stress tests with 5–10 clients sending text and video packets simultaneously.
+
+## Known Issues
+
+- **Audio Transmission**: Audio streaming is under development using FFmpeg.
+- **High Packet Load**: Large video frames may cause slight latency. Optimization suggestions:
+  - Use lower resolution (e.g., 640x480).
+  - Compress frames before transmission.
+
+## Future Improvements
+
+- Implement audio capture and playback using FFmpeg.
+- Optimize video frame compression for real-time performance.
+- Add encryption for secure communication.
+
+## Contributors
+
+- Jaden Perpignan: Project implementation, server/client logic, and synchronization.
+
+## References
+
+- OpenCV Documentation
+- FFmpeg Documentation
+- POSIX Sockets Tutorial
