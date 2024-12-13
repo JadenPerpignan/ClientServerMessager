@@ -1,6 +1,3 @@
-Here is the improved and formatted report similar to the README layout:
-
----
 
 # Multimedia Group Chat Application Final Report
 
